@@ -16,8 +16,16 @@ function App() {
   const handleDownloadTranscript = () => {
     setIsLoading(true);
     setErrorMessage('');
-    fetch(`/.netlify/functions/transcript?url=${encodeURIComponent(youtubeUrl)}`)
-      .then((response) => response.json())
+  
+    const functionUrl = process.env.REACT_APP_NETLIFY_FUNCTION_URL;
+  
+    fetch(`${functionUrl}?url=${encodeURIComponent(youtubeUrl)}`)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      })
       .then((data) => {
         if (data.error) {
           throw new Error(data.error);
@@ -26,12 +34,12 @@ function App() {
         setIsLoading(false);
       })
       .catch((error) => {
-        console.error(error);
+        console.error('Error fetching transcript:', error);
         setErrorMessage('An error occurred while fetching the transcript. Please check the URL and try again.');
         setIsLoading(false);
       });
   };
-
+  
   const handleDownloadText = () => {
     const element = document.createElement('a');
     const file = new Blob([transcript], { type: 'text/plain' });
